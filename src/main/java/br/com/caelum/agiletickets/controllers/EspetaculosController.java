@@ -51,7 +51,13 @@ public class EspetaculosController {
 	@Post
 	@Path("/espetaculos")
 	public void adiciona(Espetaculo espetaculo) {
-		// aqui eh onde fazemos as varias validacoes
+		validarEspetaculo(espetaculo);
+
+		agenda.cadastra(espetaculo);
+		result.redirectTo(this).lista();
+	}
+
+	private void validarEspetaculo(Espetaculo espetaculo) {
 		// se nao tiver nome, avisa o usuario
 		// se nao tiver descricao, avisa o usuario
 		if (Strings.isNullOrEmpty(espetaculo.getNome())) {
@@ -62,54 +68,59 @@ public class EspetaculosController {
 			validator.add(new ValidationMessage(
 					"Descricao do espetaculo nao pode estar em branco", ""));
 		}
-		validator.onErrorRedirectTo(this).lista();
 
-		agenda.cadastra(espetaculo);
-		result.redirectTo(this).lista();
+		validator.onErrorRedirectTo(this).lista();
 	}
 
 	@Get
 	@Path("/sessao/{id}")
 	public void sessao(Long id) {
+		Sessao sessao = buscarSessao(id);
+
+		result.include("sessao", sessao);
+	}
+
+	private Sessao buscarSessao(Long id) {
 		Sessao sessao = agenda.sessao(id);
 		if (sessao == null) {
 			result.notFound();
 		}
 
-		result.include("sessao", sessao);
+		return sessao;
 	}
 
 	@Post
 	@Path("/sessao/{sessaoId}/reserva")
 	public void reserva(Long sessaoId, final Integer quantidade) {
-		Sessao sessao = agenda.sessao(sessaoId);
+		Sessao sessao = buscarSessao(sessaoId);
+
+		validarParametrosReserva(sessao, quantidade);
+
+		sessao.reserva(quantidade);
+		result.include("message", "Sessao reservada com sucesso");
+
+		result.redirectTo(IndexController.class).index();
+	}
+
+	private void validarParametrosReserva(Sessao sessao,
+			final Integer quantidade) {
 		if (sessao == null) {
-			result.notFound();
 			return;
 		}
 
 		if (quantidade == null) {
 			validator.add(new ValidationMessage(
 					"Voce deve preencher a quantidade", ""));
-		} else {
-			if (quantidade < 1) {
-				validator.add(new ValidationMessage(
-						"Voce deve escolher um lugar ou mais", ""));
-			}
-
-			if (!sessao.podeReservar(quantidade)) {
-				validator.add(new ValidationMessage(
-						"Nao existem ingressos dispon√≠veis", ""));
-			}
+		} else if (quantidade < 1) {
+			validator.add(new ValidationMessage(
+					"Voce deve escolher um lugar ou mais", ""));
 		}
-
+		if (!sessao.podeReservar(quantidade)) {
+			validator.add(new ValidationMessage(
+					"Nao existem ingressos dispon√≠veis", ""));
+		}
 		// em caso de erro, redireciona para a lista de sessao
 		validator.onErrorRedirectTo(this).sessao(sessao.getId());
-
-		sessao.reserva(quantidade);
-		result.include("message", "Sessao reservada com sucesso");
-
-		result.redirectTo(IndexController.class).index();
 	}
 
 	@Get
@@ -141,7 +152,7 @@ public class EspetaculosController {
 	private Espetaculo carregaEspetaculo(Long espetaculoId) {
 		Espetaculo espetaculo = agenda.espetaculo(espetaculoId);
 		if (espetaculo == null) {
-			validator.add(new ValidationMessage("", ""));
+			validator.add(new ValidationMessage("Você de informar o espetaculo", ""));
 		}
 		validator.onErrorUse(status()).notFound();
 		return espetaculo;
