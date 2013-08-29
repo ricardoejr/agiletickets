@@ -9,8 +9,8 @@ public enum Periodicidade {
 		@Override
 		public List<Sessao> criarListaSessoes(Espetaculo espetaculo,
 				DateTime inicio, DateTime fim) {
-			CriadorDeSessoes cs = new CriadorDeSessoes();
-			return cs.criarSessoes(espetaculo, inicio, fim, this.incremento);
+			CriadorDeSessoes criadorDeSessoesDiarias = new CriadorDeSessoes();
+			return criadorDeSessoesDiarias.criarSessoes(espetaculo, inicio, fim, this.incremento);
 		}
 	},
 	SEMANAL(7) {
@@ -18,8 +18,8 @@ public enum Periodicidade {
 		public List<Sessao> criarListaSessoes(Espetaculo espetaculo,
 				DateTime inicio, DateTime fim) {
 			
-			CriadorDeSessoes cs = new CriadorDeSessoes();
-			return cs.criarSessoes(espetaculo, inicio, fim, this.incremento);
+			CriadorDeSessoes criadorDeSessoesSemais = new CriadorDeSessoes();
+			return criadorDeSessoesSemais.criarSessoes(espetaculo, inicio, fim, this.incremento);
 		}
 	};
 	
