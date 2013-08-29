@@ -136,6 +136,10 @@ public class EspetaculosController {
 	public void cadastraSessoes(Long espetaculoId, LocalDate inicio,
 			LocalDate fim, LocalTime horario, Periodicidade periodicidade) {
 		Espetaculo espetaculo = carregaEspetaculo(espetaculoId);
+		if (inicio.isAfter(fim)) {
+			validator.add(new ValidationMessage("data errada", ""));
+			validator.onErrorRedirectTo(this).sessoes(espetaculoId);
+		}
 
 		// aqui faz a magica!
 		// cria sessoes baseado no periodo de inicio e fim passados pelo usuario
@@ -152,7 +156,8 @@ public class EspetaculosController {
 	private Espetaculo carregaEspetaculo(Long espetaculoId) {
 		Espetaculo espetaculo = agenda.espetaculo(espetaculoId);
 		if (espetaculo == null) {
-			validator.add(new ValidationMessage("Você de informar o espetaculo", ""));
+			validator.add(new ValidationMessage(
+					"Você de informar o espetaculo", ""));
 		}
 		validator.onErrorUse(status()).notFound();
 		return espetaculo;

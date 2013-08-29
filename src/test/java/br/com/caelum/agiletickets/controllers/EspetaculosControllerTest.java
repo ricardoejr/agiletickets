@@ -6,6 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -15,29 +17,35 @@ import org.mockito.Spy;
 import br.com.caelum.agiletickets.domain.Agenda;
 import br.com.caelum.agiletickets.domain.DiretorioDeEstabelecimentos;
 import br.com.caelum.agiletickets.models.Espetaculo;
+import br.com.caelum.agiletickets.models.Periodicidade;
 import br.com.caelum.agiletickets.models.Sessao;
 import br.com.caelum.vraptor.Result;
 import br.com.caelum.vraptor.Validator;
 import br.com.caelum.vraptor.util.test.MockResult;
 import br.com.caelum.vraptor.util.test.MockValidator;
 import br.com.caelum.vraptor.validator.ValidationException;
+import br.com.caelum.vraptor.validator.ValidationMessage;
 
 public class EspetaculosControllerTest {
 
-
-	private @Mock Agenda agenda;
-	private @Mock DiretorioDeEstabelecimentos estabelecimentos;
-	private @Spy Validator validator = new MockValidator();
-	private @Spy Result result = new MockResult();
+	private @Mock
+	Agenda agenda;
+	private @Mock
+	DiretorioDeEstabelecimentos estabelecimentos;
+	private @Spy
+	Validator validator = new MockValidator();
+	private @Spy
+	Result result = new MockResult();
 	private EspetaculosController controller;
 
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		controller = new EspetaculosController(agenda, estabelecimentos, validator, result);
+		controller = new EspetaculosController(agenda, estabelecimentos,
+				validator, result);
 	}
 
-	@Test(expected=ValidationException.class)
+	@Test(expected = ValidationException.class)
 	public void naoDeveCadastrarEspetaculosSemNome() throws Exception {
 		Espetaculo espetaculo = new Espetaculo();
 		espetaculo.setDescricao("uma descricao");
@@ -47,7 +55,7 @@ public class EspetaculosControllerTest {
 		verifyZeroInteractions(agenda);
 	}
 
-	@Test(expected=ValidationException.class)
+	@Test(expected = ValidationException.class)
 	public void naoDeveCadastrarEspetaculosSemDescricao() throws Exception {
 		Espetaculo espetaculo = new Espetaculo();
 		espetaculo.setNome("um nome");
@@ -77,7 +85,7 @@ public class EspetaculosControllerTest {
 		verify(result).notFound();
 	}
 
-	@Test(expected=ValidationException.class)
+	@Test(expected = ValidationException.class)
 	public void naoDeveReservarZeroIngressos() throws Exception {
 		when(agenda.sessao(1234l)).thenReturn(new Sessao());
 
@@ -86,8 +94,9 @@ public class EspetaculosControllerTest {
 		verifyZeroInteractions(result);
 	}
 
-	@Test(expected=ValidationException.class)
-	public void naoDeveReservarMaisIngressosQueASessaoPermite() throws Exception {
+	@Test(expected = ValidationException.class)
+	public void naoDeveReservarMaisIngressosQueASessaoPermite()
+			throws Exception {
 		Sessao sessao = new Sessao();
 		sessao.setTotalIngressos(3);
 
@@ -108,5 +117,17 @@ public class EspetaculosControllerTest {
 		controller.reserva(1234l, 3);
 
 		assertThat(sessao.getIngressosDisponiveis(), is(2));
+	}
+
+	@Test
+	public void naoDeveCadastrarSessaoComDataInicioMaiorQueDataFim() {
+		LocalDate inicio = new LocalDate();
+		LocalDate fim = inicio.minusDays(2);
+		LocalTime horario = new LocalTime();
+
+		controller.cadastraSessoes(10L, inicio, fim, horario,
+				Periodicidade.DIARIA);
+
+		verify(validator).add(new ValidationMessage("data errada", ""));
 	}
 }
