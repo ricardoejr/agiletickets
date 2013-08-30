@@ -96,15 +96,19 @@ public class EspetaculosController {
 
 	@Post
 	@Path("/sessao/{sessaoId}/reserva")
-	public void reserva(Long sessaoId, final Integer quantidade) {
+	public void reserva(Long sessaoId, final Integer quantidade, final Double desconto) {
 		Sessao sessao = buscarSessao(sessaoId);
 
 		validarParametrosReserva(sessao, quantidade);
 
 		sessao.reserva(quantidade);
-		result.include("message", "Sessao reservada com sucesso");
+
+		BigDecimal precoTotal = sessao.getPreco().multiply(BigDecimal.valueOf(quantidade)).multiply(BigDecimal.valueOf(desconto));
+
+		result.include("message", "Sessao reservada com sucesso por " + CURRENCY.format(precoTotal));
 
 		result.redirectTo(IndexController.class).index();
+
 	}
 
 	private void validarParametrosReserva(Sessao sessao,
@@ -126,14 +130,6 @@ public class EspetaculosController {
 		}
 		// em caso de erro, redireciona para a lista de sessao
 		validator.onErrorRedirectTo(this).sessao(sessao.getId());
-		sessao.reserva(quantidade);
-
-		BigDecimal precoTotal = sessao.getPreco().multiply(BigDecimal.valueOf(quantidade));
-
-		result.include("message", "Sessao reservada com sucesso por " + CURRENCY.format(precoTotal));
-
-		result.redirectTo(IndexController.class).index();
-
 	}
 
 	@Get
