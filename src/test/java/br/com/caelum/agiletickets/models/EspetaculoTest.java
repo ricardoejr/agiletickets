@@ -148,7 +148,7 @@ public class EspetaculoTest {
 		List<Sessao> listaSessoes = espetaculo.criaSessoes(dataInicio, dataFim,
 				hora, Periodicidade.SEMANAL);
 
-		Assert.assertEquals(2, listaSessoes.size());
+		Assert.assertEquals(20, listaSessoes.size());
 		Assert.assertSame(espetaculo, listaSessoes.get(0).getEspetaculo());
 
 		for (int i = 0; i <= 1; i++) {
